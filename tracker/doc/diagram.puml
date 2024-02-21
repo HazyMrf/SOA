@@ -1,0 +1,54 @@
+plantuml
+@startuml
+!define Table(name,desc) entity name as "desc" << (T, white) >>
+!define primary_key(x) <u>x</u>
+!define foreign_key(x) <color:red><</color> x
+
+Table(user, "Пользователь") {
+    primary_key(id) : integer
+    username : varchar
+    email : varchar
+    hashed_password : varchar
+    created_at : datetime
+    updated_at : datetime
+}
+
+Table(task, "Задача") {
+    primary_key(id) : integer
+    foreign_key(user_id) : integer
+    title : varchar
+    description : text
+    status : varchar
+    created_at : datetime
+    updated_at : datetime
+}
+
+Table(comment, "Комментарий") {
+    primary_key(id) : integer
+    foreign_key(task_id) : integer
+    foreign_key(user_id) : integer
+    content : text
+    created_at : datetime
+    updated_at : datetime
+}
+
+Table(event, "Событие") {
+    primary_key(id) : integer
+    type : varchar
+    details : text
+    created_at : datetime
+}
+
+Table(stats, "Статистика") {
+    foreign_key(event_id) : integer
+    views : integer
+    likes : integer
+}
+
+' Relations
+user |o--o{ task : "создает"
+task ||--o{ comment : "имеет"
+user |o--o{ comment : "оставляет"
+event ||--o{ stats : "имеет"
+
+@enduml
