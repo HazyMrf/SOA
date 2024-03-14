@@ -1,0 +1,89 @@
+openapi: 3.0.0
+info:
+  title: User Management API
+  description: API для управления пользователями, содержащее методы для регистрации, аутентификации и обновления профиля.
+  version: "1.0"
+servers:
+  - url: http://localhost:5000/
+    description: Локальный сервер для разработки
+
+paths:
+  /register:
+    post:
+      summary: Регистрация нового пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+                - username
+                - password
+      responses:
+        '201':
+          description: Пользователь успешно создан
+        '409':
+          description: Пользователь уже существует
+
+  /login:
+    post:
+      summary: Вход пользователя в систему
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          description: Успешный вход в систему
+        '401':
+          description: Ошибка аутентификации (неверное имя пользователя или пароль)
+
+  /update_profile:
+    post:
+      summary: Обновление профиля пользователя
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first_name:
+                  type: string
+                last_name:
+                  type: string
+                birth_date:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                phone_number:
+                  type: string
+      responses:
+        '200':
+          description: Профиль успешно обновлен
+      security:
+        - sessionCookie: []
+
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: session
