@@ -8,13 +8,13 @@ import os
 app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = "postgresql://username:password@db/database"
+app.secret_key = 'your_secret_key' # Разумеется так делать не стоит))
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
-
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -55,8 +55,8 @@ def login():
     data = request.get_json()
     user = User.query.filter_by(username=data['username']).first()
     if user and user.check_password(data['password']):
-        return jsonify({'message': 'Logged in successfully'})
-    login_user(user)
+        login_user(user)
+        return jsonify({'message': 'Logged in successfully'}), 200
     return jsonify({'message': 'Invalid username or password'}), 401
 
 @app.route('/update_profile', methods=['POST'])
