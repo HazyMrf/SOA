@@ -29,6 +29,7 @@ Rel(main_api, stats_api, "Делает запросы", "gRPC")
 Rel(tasks_api, tasks_db, "Читает/Записывает")
 Rel(stats_api, stats_db, "Читает/Записывает")
 
+Rel(main_api, broker, "Передача событий для статистики")
 Rel(stats_api, broker, "Подписывается на события", "MQ")
 
 @enduml

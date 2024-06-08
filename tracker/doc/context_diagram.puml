@@ -12,8 +12,6 @@ System_Boundary(c1, "Трекер задач") {
 System_Ext(mail_system, "Почтовая система", "Используется для отправки уведомлений.")
 
 Rel(user, tracker_api, "Использует")
-Rel(user, tasks_service, "Использует")
-Rel(user, stats_service, "Использует")
 Rel(tracker_api, mail_system, "Отправляет уведомления")
 
 @enduml
