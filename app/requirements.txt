@@ -1,0 +1,9 @@
+flask
+flask_sqlalchemy
+flask-login
+Flask-Migrate
+werkzeug
+psycopg2-binary
+grpcio
+grpcio-tools
+grpcio-reflection

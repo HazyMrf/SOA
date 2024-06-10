@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+
+  # DBs
+
+  db:
+    image: "postgres:13"
+    environment:
+      - POSTGRES_USER=db_user
+      - POSTGRES_PASSWORD=db_password
+      - POSTGRES_DB=db
+    ports:
+      - "6666:5432"
+    volumes:
+      - db_postgres_data:/var/lib/postgresql/data/
+  
+  postdb:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postdb_user
+      POSTGRES_PASSWORD: postdb_password
+      POSTGRES_DB: postdb
+    ports:
+      - "5555:5432"
+    volumes:
+      - postdb_postgres_data:/var/lib/postgresql/data
+      - ./post_service/init-postdb.sql:/docker-entrypoint-initdb.d/init-postdb.sql # init postDB
+
+  # Services
+  
+  app:
+    build:
+      context: .
+      dockerfile: ./app/Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - SECRET_KEY=secret_key
+      - SQLALCHEMY_DATABASE_URI=postgresql://db_user:db_password@db/db
+      - GRPC_SERVER_URI=post_service:12345
+    depends_on:
+      - db
+
+  post_service:
+    build: 
+      context: .
+      dockerfile: ./post_service/Dockerfile
+    ports:
+      - "12345:12345"
+    environment:
+      - DATABASE_URI=postgresql://postdb_user:postdb_password@postdb/postdb
+    depends_on:
+      - postdb
+
+volumes:
+  db_postgres_data:
+  postdb_postgres_data:
