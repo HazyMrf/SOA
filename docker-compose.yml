@@ -28,16 +28,13 @@ services:
       - ./post_service/init-postdb.sql:/docker-entrypoint-initdb.d/init-postdb.sql # init postDB
 
   statdb:
-    image: bitnami/clickhouse:latest
-    environment:
-      CLICKHOUSE_ADMIN_USER: STATDB
-      CLICKHOUSE_ADMIN_PASSWORD: STATDB
-      CLICKHOUSE_HTTP_PORT: 31343
+    image: yandex/clickhouse-server:latest
     ports:
-      - "31343:31343"
+      - "9000:9000"
+      - "8123:8123"
     volumes:
-      - "statdb:/bitnami/clickhouse"
-      - "./stat_service/init-statdb.sql:/docker-entrypoint-initdb.d/init-statdb.sql"
+      - "statdb:/var/lib/clickhouse"
+      - "./stat_service/init.sql:/docker-entrypoint-initdb.d/init.sql"
     depends_on:
       broker:
         condition: service_healthy
@@ -56,25 +53,11 @@ services:
       - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@broker:31342
       - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
     ports:
-        - "31341:31341"
+      - "31341:31341"
     healthcheck:
       test: ["CMD-SHELL", "netstat -an | grep -q 31341 | echo"]
     logging:
       driver: none
-  
-  app:
-    build:
-      context: .
-      dockerfile: ./app/Dockerfile
-    ports:
-      - "5000:5000"
-    environment:
-      - FLASK_ENV=development
-      - SECRET_KEY=secret_key
-      - SQLALCHEMY_DATABASE_URI=postgresql://db_user:db_password@db/db
-      - GRPC_SERVER_URI=post_service:12345
-    depends_on:
-      - db
 
   post_service:
     build: 
@@ -87,6 +70,27 @@ services:
     depends_on:
       - postdb
 
+  app:
+    build:
+      context: .
+      dockerfile: ./app/Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - SECRET_KEY=secret_key
+      - SQLALCHEMY_DATABASE_URI=postgresql://db_user:db_password@db/db
+      - GRPC_SERVER_URI=post_service:12345
+      - KAFKA_BROKER_URL=broker:31341
+      - CLICKHOUSE_URL=statdb:9000
+      - CLICKHOUSE_USER=STATDB
+      - CLICKHOUSE_PASS=STATDB
+    depends_on:
+      - db
+      - post_service
+      - statdb
+
 volumes:
   db_postgres_data:
   postdb_postgres_data:
+  statdb:

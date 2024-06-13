@@ -44,3 +44,5 @@
 
     * `curl -b cookie.txt -X GET http://localhost:5000/posts -H "Content-Type: application/json" -d '{"page_number": "1", "posts_per_page": "10"}'`
 
+Чтобы запустить кафку:
+docker exec -it 9dc7ff75ce0e /bin/bash

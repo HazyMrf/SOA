@@ -3,6 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
+from confluent_kafka import Producer
+import json
 import os
 
 import grpc
@@ -14,6 +16,10 @@ app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("SQLALCHEMY_DATABASE_URI")
 app.config['GRPC_SERVER_URI'] = os.environ.get("GRPC_SERVER_URI")
+app.config['KAFKA_BROKER_URL'] = os.environ.get("KAFKA_BROKER_URL")
+app.config['CLICKHOUSE_URL'] = os.environ.get("CLICKHOUSE_URL")
+app.config['CLICKHOUSE_USER'] = os.environ.get("CLICKHOUSE_USER")
+app.config['CLICKHOUSE_PASS'] = os.environ.get("CLICKHOUSE_PASS")
 app.config['SECRET_KEY'] = os.environ.get("SECRET_KEY") # поправил)
 
 db = SQLAlchemy(app)
@@ -24,6 +30,8 @@ login_manager.init_app(app)
 
 channel = grpc.insecure_channel(app.config['GRPC_SERVER_URI'])
 grpc_client = post_service_pb2_grpc.PostServiceStub(channel)
+
+kafka_broker = Producer({'bootstrap.servers': app.config['KAFKA_BROKER_URL']})
 
 def DetailedError(e: grpc.RpcError):
     return jsonify({"grpc_error": str(e.code()), "error_details": e.details()})
@@ -137,6 +145,26 @@ def list_posts():
         return jsonify(MessageToDict(response, preserving_proto_field_name=True))
     except grpc.RpcError as e:
         return DetailedError(e), 500
+    
+def delivery_report(err, msg):
+    if err is not None:
+        print(f'Message delivery failed: {err}')
+    else:
+        print(f'Message delivered to {msg.topic()} [{msg.partition()}]')
+
+@app.route('/posts/<int:post_id>/views', methods=['POST'])
+def post_view(post_id):
+    data = {'post_id': post_id, 'views': request.json['views']}
+    kafka_broker.produce('views', key=str(post_id), value=json.dumps(data), callback=delivery_report)
+    kafka_broker.flush()
+    return jsonify(success=True), 200
+
+@app.route('/posts/<int:post_id>/likes', methods=['POST'])
+def post_like(post_id):
+    data = {'post_id': post_id, 'likes': request.json['likes']}
+    kafka_broker.produce('likes', key=str(post_id), value=json.dumps(data), callback=delivery_report)
+    kafka_broker.flush()
+    return jsonify(success=True), 200
 
 if __name__ == '__main__':
     with app.app_context():
