@@ -44,5 +44,32 @@
 
     * `curl -b cookie.txt -X GET http://localhost:5000/posts -H "Content-Type: application/json" -d '{"page_number": "1", "posts_per_page": "10"}'`
 
-Чтобы запустить кафку:
-docker exec -it 9dc7ff75ce0e /bin/bash
+### Like/View Post:
+
+* Like:
+
+    * `curl -b cookie.txt -X POST http://localhost:5000/posts/POST_ID/like  -H "Content-Type: application/json"`
+
+* View:
+
+    * `curl -b cookie.txt -X POST http://localhost:5000/posts/POST_ID/view  -H "Content-Type: application/json"`
+
+### Проверка работы Kafka:
+
+* Зайти в докер контейнер с Kafka:
+
+    * `docker exec -it soa-broker-1 /bin/bash`
+
+* Посмотреть отгружаемые данные:
+
+    * `./opt/bitnami/kafka/bin/kafka-console-consumer.sh --bootstrap-server broker:31341 --topic likes --from-beginning`
+
+### Проверка работы ClickHouse:
+
+* Зайти в докер контейнер с ClickHouse:
+
+    * `docker exec -it soa-statdb-1 /bin/bash`
+
+* Открыть ClickHouse клиента:
+
+    * `./usr/bin/clickhouse-client`

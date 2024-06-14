@@ -152,19 +152,19 @@ def delivery_report(err, msg):
     else:
         print(f'Message delivered to {msg.topic()} [{msg.partition()}]')
 
-@app.route('/posts/<int:post_id>/views', methods=['POST'])
+@app.route('/posts/<int:post_id>/view', methods=['POST'])
 def post_view(post_id):
-    data = {'post_id': post_id, 'views': request.json['views']}
+    data = {'post_id': post_id, 'user_id': current_user.id}
     kafka_broker.produce('views', key=str(post_id), value=json.dumps(data), callback=delivery_report)
     kafka_broker.flush()
-    return jsonify(success=True), 200
+    return jsonify({f'Post {post_id} viewed by' : current_user.id}), 200
 
-@app.route('/posts/<int:post_id>/likes', methods=['POST'])
+@app.route('/posts/<int:post_id>/like', methods=['POST'])
 def post_like(post_id):
-    data = {'post_id': post_id, 'likes': request.json['likes']}
+    data = {'post_id': post_id, 'user_id': current_user.id}
     kafka_broker.produce('likes', key=str(post_id), value=json.dumps(data), callback=delivery_report)
     kafka_broker.flush()
-    return jsonify(success=True), 200
+    return jsonify({f'Post {post_id} liked by' : current_user.id}), 200
 
 if __name__ == '__main__':
     with app.app_context():
