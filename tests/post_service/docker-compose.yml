@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  postdb:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: postdb_user
+      POSTGRES_PASSWORD: postdb_password
+      POSTGRES_DB: postdb
+    ports:
+      - "5555:5432"
+    volumes:
+      - postdb_postgres_data:/var/lib/postgresql/data
+      - ../../post_service/init-postdb.sql:/docker-entrypoint-initdb.d/init-postdb.sql # init postDB
+
+  post_service:
+      build: 
+        context: ../../
+        dockerfile: ./post_service/Dockerfile
+      ports:
+        - "12345:12345"
+      environment:
+        - DATABASE_URI=postgresql://postdb_user:postdb_password@postdb/postdb
+      depends_on:
+        - postdb
+
+
+volumes:
+  postdb_postgres_data:

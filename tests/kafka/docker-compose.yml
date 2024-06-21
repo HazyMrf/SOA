@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+
+  statdb:
+      image: yandex/clickhouse-server:latest
+      ports:
+        - "9000:9000"
+        - "8123:8123"
+      volumes:
+        - "statdb:/var/lib/clickhouse"
+        - "../../stat_service/init.sql:/docker-entrypoint-initdb.d/init.sql"
+      depends_on:
+        broker:
+          condition: service_healthy
+      logging:
+        driver: none
+
+  broker:
+    image: bitnami/kafka:latest
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:31341,CONTROLLER://:31342
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@broker:31342
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+    ports:
+      - "31341:31341"
+    healthcheck:
+      test: ["CMD-SHELL", "netstat -an | grep -q 31341 | echo"]
+    logging:
+      driver: none
+
+  test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python3 -m unittest service_test.py
+    depends_on:
+      - broker
+      - statdb
+
+volumes:
+  statdb:

@@ -2,7 +2,7 @@ name: tests
 on: pull_request
 
 jobs:
-  test-stat-service:
+  test-PostService:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -20,7 +20,7 @@ jobs:
           cd post_service
           python3 -m unittest unit_test.py
 
-  test-task-service:
+  test-StatService:
     runs-on: ubuntu-latest
     strategy:
       matrix:
