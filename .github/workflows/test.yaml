@@ -1,0 +1,39 @@
+name: tests
+on: pull_request
+
+jobs:
+  test-PostService:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9"]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: PostService unittests
+        run: |
+          python3 -m pip install -r post_service/requirements.txt
+          cd post_service
+          python3 -m unittest unit_test.py
+
+  test-StatService:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9"]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: StatService unittests
+        run: |
+          python3 -m pip install -r stat_service/requirements.txt
+          cd stat_service
+          python3 -m unittest unit_test.py
