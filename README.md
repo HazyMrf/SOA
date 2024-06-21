@@ -1,10 +1,11 @@
 # Парфененко Илья Олегович
 
 ## Сборка приложения
-* docker compose build
-* docker compose up -d post_service
-* docker compose up app
-Не забывайте чистить volume баз данных через `docker volume rm $(docker volume ls -q)`.
+* `docker compose build`
+* `docker compose up -d post_service`
+* `docker compose up app`
+
+Не забывайте чистить `volume` баз данных через `docker volume rm $(docker volume ls -q)`.
 
 ## cURL запросы для проверки валидности приложения
 
@@ -73,3 +74,21 @@
 * Открыть ClickHouse клиента:
 
     * `./usr/bin/clickhouse-client`
+
+### Сбор статистики:
+
+* Статистика поста:
+
+    * `curl -b cookie.txt -X GET http://localhost:5000/posts/POST_ID/statistics -H "Content-Type: application/json"`
+
+* Топ постов по количеству лайков:
+
+    * `curl -b cookie.txt -X GET http://localhost:5000/posts/top_liked -H "Content-Type: application/json"`
+
+* Топ постов по количеству просмотров:
+
+    * `curl -b cookie.txt -X GET http://localhost:5000/posts/top_viewed -H "Content-Type: application/json"`
+
+* Топ пользователей по количеству лайков:
+
+    * `curl -b cookie.txt -X GET http://localhost:5000/posts/top_users -H "Content-Type: application/json"`

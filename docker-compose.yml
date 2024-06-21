@@ -70,6 +70,17 @@ services:
     depends_on:
       - postdb
 
+  stat_service:
+    build:
+      context: .
+      dockerfile: ./stat_service/Dockerfile
+    ports:
+      - "54321:54321"
+    environment:
+      - CLICKHOUSE_URL=statdb:9000
+    depends_on:
+      - statdb
+
   app:
     build:
       context: .
@@ -80,7 +91,8 @@ services:
       - FLASK_ENV=development
       - SECRET_KEY=secret_key
       - SQLALCHEMY_DATABASE_URI=postgresql://db_user:db_password@db/db
-      - GRPC_SERVER_URI=post_service:12345
+      - GRPC_POST_SERVICE=post_service:12345
+      - GRPC_STAT_SERVICE=stat_service:54321
       - KAFKA_BROKER_URL=broker:31341
       - CLICKHOUSE_URL=statdb:9000
       - CLICKHOUSE_USER=STATDB
@@ -88,7 +100,7 @@ services:
     depends_on:
       - db
       - post_service
-      - statdb
+      - stat_service
 
 volumes:
   db_postgres_data:

@@ -1,0 +1,5 @@
+psycopg2-binary
+grpcio
+grpcio-tools
+fastapi
+clickhouse_driver
