@@ -12,8 +12,6 @@ import post_service_pb2_grpc
 
 # Wrappers
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=db.create_engine(os.environ.get("DATABASE_URI")))
-
 Base = declarative_base()
 class Post(Base):
     __tablename__ = 'posts'
@@ -29,8 +27,8 @@ def PostToPB(post: Post):
 # Post Service
 
 class PostService(post_service_pb2_grpc.PostServiceServicer):
-    def __init__(self):
-        self.session = SessionLocal()
+    def __init__(self, db):
+        self.session = db
 
     def CreatePost(self, request, context):
         post = Post(title=request.title, content=request.content, user_id=request.user_id)
@@ -49,7 +47,7 @@ class PostService(post_service_pb2_grpc.PostServiceServicer):
             context.abort(grpc.StatusCode.NOT_FOUND, 'Post not found')
         else:
             context.abort(grpc.StatusCode.PERMISSION_DENIED, 'Permission denied')
-    
+
     def DeletePost(self, request, context):
         post = self.session.query(Post).filter(Post.id == request.id).first()
         if post and post.user_id == request.user_id:
@@ -76,8 +74,9 @@ class PostService(post_service_pb2_grpc.PostServiceServicer):
 
 # Run
 if __name__ == '__main__':
+    SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=db.create_engine(os.environ.get("DATABASE_URI")))
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    post_service_pb2_grpc.add_PostServiceServicer_to_server(PostService(), server)
+    post_service_pb2_grpc.add_PostServiceServicer_to_server(PostService(SessionLocal()), server)
 
     server.add_insecure_port('[::]:12345')
     server.start()

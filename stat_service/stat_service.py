@@ -13,15 +13,18 @@ import clickhouse_driver
 # To make likes/views unique by each user, pass `DISTINCT user_id` into count() in SQL request
 # !!!!!
 
+def InitClickHouse():
+    host, port = os.environ.get("CLICKHOUSE_URL").split(':')
+    time.sleep(10)
+    return clickhouse_driver.Client(host=host, port=port)
+
 class StatService(stat_service_pb2_grpc.StatServiceServicer):
-    def __init__(self):
-        host, port = os.environ.get("CLICKHOUSE_URL").split(':')
-        time.sleep(10)
-        self.client = clickhouse_driver.Client(host=host, port=port)
+    def __init__(self, db):
+        self.client = db
     
     def GetPostStatistics(self, request, context):
         likes = self.client.execute(f'SELECT count() FROM statdb.likes WHERE post_id = {request.post_id}')[0][0]
-        views = self.client.execute(f'SELECT count(DISTINCT user_id) FROM statdb.views WHERE post_id = {request.post_id}')[0][0]
+        views = self.client.execute(f'SELECT count() FROM statdb.views WHERE post_id = {request.post_id}')[0][0]
         return stat_service_pb2.PostStatisticsResponse(likes=likes, views=views)
 
     def GetTopPosts(self, request, context):
@@ -47,7 +50,7 @@ class StatService(stat_service_pb2_grpc.StatServiceServicer):
 # Run
 if __name__ == '__main__':
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    stat_service_pb2_grpc.add_StatServiceServicer_to_server(StatService(), server)
+    stat_service_pb2_grpc.add_StatServiceServicer_to_server(StatService(InitClickHouse()), server)
 
     server.add_insecure_port('[::]:54321')
     server.start()
